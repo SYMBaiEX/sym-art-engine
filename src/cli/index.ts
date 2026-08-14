@@ -305,6 +305,20 @@ tools
   });
 
 tools
+  .command('solid')
+  .requiredOption('-o, --out <file>')
+  .requiredOption('-c, --color <hex>')
+  .requiredOption('-w, --width <n>')
+  .requiredOption('--height <n>')
+  .description('write a solid-color PNG (flat backgrounds)')
+  .action(async (opts: { out: string; color: string; width: string; height: string }) => {
+    const { solidColor } = await import('../utils/images.js');
+    const buffer = await solidColor(parseInt(opts.width, 10), parseInt(opts.height, 10), opts.color);
+    writeFileSync(opts.out, buffer);
+    console.log(green(`Solid ${opts.color} → ${opts.out}`));
+  });
+
+tools
   .command('hash')
   .requiredOption('-i, --in <file>')
   .description('print the sha256 of a file (golden-test bookkeeping)')

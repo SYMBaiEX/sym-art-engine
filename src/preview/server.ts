@@ -108,16 +108,19 @@ export async function startStudio(
           include: isolate ? new Set([isolate]) : undefined,
         }).filter((p) => !hidden.has(p.slot));
 
-        const { width, height } = project.config.canvas;
+        // Assets are pre-resized to PREVIEW_SIZE, so composite on a
+        // preview-sized canvas for a fast hot path.
         let base: Buffer | undefined;
         if (isolate) {
-          board ??= await checkerboard(width, height);
+          board ??= await checkerboard(PREVIEW_SIZE, PREVIEW_SIZE);
           base = board;
         }
-        const full = await compositePlan(plan, { width, height, base, bufferFor: previewBuffer });
-        // Assets were pre-resized; composite happened on a full-size canvas —
-        // crop/resize final to preview size.
-        const png = await sharp(full).resize(PREVIEW_SIZE).png().toBuffer();
+        const png = await compositePlan(plan, {
+          width: PREVIEW_SIZE,
+          height: PREVIEW_SIZE,
+          base,
+          bufferFor: previewBuffer,
+        });
         res.writeHead(200, { 'content-type': 'image/png' }).end(png);
         return;
       }
