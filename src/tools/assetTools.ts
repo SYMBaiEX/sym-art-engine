@@ -93,6 +93,13 @@ export interface ExtractOptions {
    * touching the artwork itself.
    */
   minComponent?: number;
+  /**
+   * Intersect the mask with a second diff: keep only pixels that ALSO
+   * differ from this reference image. Used with masked two-pass
+   * extraction to reject ghost pixels where the tint edit redrew
+   * untouched linework (those match the base; real artwork doesn't).
+   */
+  alsoDiffer?: { image: Buffer | string; threshold?: number };
 }
 
 /**
@@ -128,6 +135,24 @@ export async function extractLayer(
     const dg = Math.abs((a.data[i + 1] as number) - (b.data[i + 1] as number));
     const db = Math.abs((a.data[i + 2] as number) - (b.data[i + 2] as number));
     if (Math.max(dr, dg, db) > threshold) mask[p] = 1;
+  }
+
+  if (options.alsoDiffer) {
+    const ref = await sharp(options.alsoDiffer.image)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    if (ref.info.width === width && ref.info.height === height) {
+      const t2 = options.alsoDiffer.threshold ?? 12;
+      for (let p = 0; p < n; p++) {
+        if (!mask[p]) continue;
+        const i = p * 4;
+        const dr = Math.abs((ref.data[i] as number) - (b.data[i] as number));
+        const dg = Math.abs((ref.data[i + 1] as number) - (b.data[i + 1] as number));
+        const db = Math.abs((ref.data[i + 2] as number) - (b.data[i + 2] as number));
+        if (Math.max(dr, dg, db) <= t2) mask[p] = 0;
+      }
+    }
   }
 
   if (despeckle > 0) {

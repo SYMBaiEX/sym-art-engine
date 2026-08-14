@@ -283,8 +283,10 @@ tools
   .option('--min-component <n>', 'drop mask blobs smaller than n pixels', '250')
   .option('--post-key <hex>', 'after extraction, key out background-colored ghost pixels')
   .option('--post-key-tolerance <n>', 'post-key full-transparency distance', '16')
+  .option('--also-differ <file>', 'keep only pixels that also differ from this reference (ghost rejection)')
+  .option('--also-differ-threshold <n>', 'threshold for --also-differ', '12')
   .description('extract the layer one cumulative stage added over another')
-  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean; fillHolesIgnoreBottom?: boolean; minComponent: string; postKey?: string; postKeyTolerance: string }) => {
+  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean; fillHolesIgnoreBottom?: boolean; minComponent: string; postKey?: string; postKeyTolerance: string; alsoDiffer?: string; alsoDifferThreshold: string }) => {
     let buffer = await extractLayer(opts.prev, opts.next, {
       threshold: parseFloat(opts.threshold),
       despeckle: parseInt(opts.despeckle, 10),
@@ -292,6 +294,9 @@ tools
       fillHoles: opts.fillHoles || opts.fillHolesIgnoreBottom,
       fillHolesIgnoreBottom: opts.fillHolesIgnoreBottom,
       minComponent: parseInt(opts.minComponent, 10),
+      alsoDiffer: opts.alsoDiffer
+        ? { image: opts.alsoDiffer, threshold: parseFloat(opts.alsoDifferThreshold) }
+        : undefined,
     });
     if (opts.postKey) {
       const tol = parseFloat(opts.postKeyTolerance);
