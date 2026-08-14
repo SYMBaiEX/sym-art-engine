@@ -77,6 +77,12 @@ export interface ExtractOptions {
   fillHoles?: boolean;
   /** Feather the mask edge by ~1px for soft compositing. */
   feather?: boolean;
+  /**
+   * Drop connected mask components smaller than this many pixels.
+   * Kills stray leftover speckles around the extracted artwork without
+   * touching the artwork itself.
+   */
+  minComponent?: number;
 }
 
 /**
@@ -123,6 +129,9 @@ export async function extractLayer(
     mask = erode(mask, width, height, close);
   }
   if (options.fillHoles) mask = fillEnclosedHoles(mask, width, height);
+  if (options.minComponent && options.minComponent > 0) {
+    mask = dropSmallComponents(mask, width, height, options.minComponent);
+  }
 
   const out = Buffer.alloc(n * 4);
   for (let p = 0; p < n; p++) {
@@ -239,6 +248,49 @@ function morph(
     return out;
   };
   return pass(pass(mask, true), false);
+}
+
+/**
+ * Label 4-connected mask components and zero out any smaller than
+ * `minArea` pixels — stray speckles left around the real artwork.
+ */
+function dropSmallComponents(
+  mask: Uint8Array,
+  width: number,
+  height: number,
+  minArea: number,
+): Uint8Array {
+  const out = new Uint8Array(mask.length);
+  const visited = new Uint8Array(mask.length);
+  const stack: number[] = [];
+  const component: number[] = [];
+  for (let start = 0; start < mask.length; start++) {
+    if (!mask[start] || visited[start]) continue;
+    stack.length = 0;
+    component.length = 0;
+    stack.push(start);
+    visited[start] = 1;
+    while (stack.length > 0) {
+      const p = stack.pop() as number;
+      component.push(p);
+      const x = p % width;
+      const y = (p / width) | 0;
+      const tryPush = (q: number) => {
+        if (mask[q] && !visited[q]) {
+          visited[q] = 1;
+          stack.push(q);
+        }
+      };
+      if (x > 0) tryPush(p - 1);
+      if (x < width - 1) tryPush(p + 1);
+      if (y > 0) tryPush(p - width);
+      if (y < height - 1) tryPush(p + width);
+    }
+    if (component.length >= minArea) {
+      for (const p of component) out[p] = 1;
+    }
+  }
+  return out;
 }
 
 /**

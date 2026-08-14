@@ -279,13 +279,15 @@ tools
   .option('--despeckle <n>', 'speckle removal radius', '2')
   .option('--close <n>', 'mask closing radius', '3')
   .option('--fill-holes', 'fill fully enclosed mask holes')
+  .option('--min-component <n>', 'drop mask blobs smaller than n pixels', '250')
   .description('extract the layer one cumulative stage added over another')
-  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean }) => {
+  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean; minComponent: string }) => {
     const buffer = await extractLayer(opts.prev, opts.next, {
       threshold: parseFloat(opts.threshold),
       despeckle: parseInt(opts.despeckle, 10),
       close: parseInt(opts.close, 10),
       fillHoles: opts.fillHoles,
+      minComponent: parseInt(opts.minComponent, 10),
     });
     writeFileSync(opts.out, buffer);
     console.log(green(`Extracted layer ${opts.next} - ${opts.prev} → ${opts.out}`));
