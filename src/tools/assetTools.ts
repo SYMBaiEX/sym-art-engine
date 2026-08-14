@@ -45,6 +45,10 @@ export async function keyBackground(
     else if (dist >= softness) alpha = 1;
     else alpha = (dist - tolerance) / (softness - tolerance);
 
+    // Never resurrect pixels that are already transparent — keying a
+    // layer that carries alpha must only ever remove, not add.
+    alpha = Math.min(alpha, (data[i + 3] as number) / 255);
+
     if (alpha === 0) {
       data[i] = 0;
       data[i + 1] = 0;
@@ -75,6 +79,12 @@ export interface ExtractOptions {
   close?: number;
   /** Fill regions fully enclosed by changed pixels (hoodie interiors). */
   fillHoles?: boolean;
+  /**
+   * With fillHoles: don't flood from the bottom border, so garment
+   * interiors that bleed off the bottom of a chest-up portrait still
+   * count as enclosed and get filled.
+   */
+  fillHolesIgnoreBottom?: boolean;
   /** Feather the mask edge by ~1px for soft compositing. */
   feather?: boolean;
   /**
@@ -128,7 +138,9 @@ export async function extractLayer(
     mask = dilate(mask, width, height, close);
     mask = erode(mask, width, height, close);
   }
-  if (options.fillHoles) mask = fillEnclosedHoles(mask, width, height);
+  if (options.fillHoles) {
+    mask = fillEnclosedHoles(mask, width, height, !options.fillHolesIgnoreBottom);
+  }
   if (options.minComponent && options.minComponent > 0) {
     mask = dropSmallComponents(mask, width, height, options.minComponent);
   }
@@ -302,6 +314,7 @@ function fillEnclosedHoles(
   mask: Uint8Array,
   width: number,
   height: number,
+  floodBottom = true,
 ): Uint8Array {
   const outside = new Uint8Array(mask.length);
   const stack: number[] = [];
@@ -313,7 +326,7 @@ function fillEnclosedHoles(
   };
   for (let x = 0; x < width; x++) {
     push(x);
-    push((height - 1) * width + x);
+    if (floodBottom) push((height - 1) * width + x);
   }
   for (let y = 0; y < height; y++) {
     push(y * width);

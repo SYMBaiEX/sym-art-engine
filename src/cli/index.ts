@@ -279,16 +279,28 @@ tools
   .option('--despeckle <n>', 'speckle removal radius', '2')
   .option('--close <n>', 'mask closing radius', '3')
   .option('--fill-holes', 'fill fully enclosed mask holes')
+  .option('--fill-holes-ignore-bottom', 'treat bottom-bleeding interiors as enclosed (garments in chest-up portraits)')
   .option('--min-component <n>', 'drop mask blobs smaller than n pixels', '250')
+  .option('--post-key <hex>', 'after extraction, key out background-colored ghost pixels')
+  .option('--post-key-tolerance <n>', 'post-key full-transparency distance', '16')
   .description('extract the layer one cumulative stage added over another')
-  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean; minComponent: string }) => {
-    const buffer = await extractLayer(opts.prev, opts.next, {
+  .action(async (opts: { prev: string; next: string; out: string; threshold: string; despeckle: string; close: string; fillHoles?: boolean; fillHolesIgnoreBottom?: boolean; minComponent: string; postKey?: string; postKeyTolerance: string }) => {
+    let buffer = await extractLayer(opts.prev, opts.next, {
       threshold: parseFloat(opts.threshold),
       despeckle: parseInt(opts.despeckle, 10),
       close: parseInt(opts.close, 10),
-      fillHoles: opts.fillHoles,
+      fillHoles: opts.fillHoles || opts.fillHolesIgnoreBottom,
+      fillHolesIgnoreBottom: opts.fillHolesIgnoreBottom,
       minComponent: parseInt(opts.minComponent, 10),
     });
+    if (opts.postKey) {
+      const tol = parseFloat(opts.postKeyTolerance);
+      buffer = await keyBackground(buffer, {
+        color: opts.postKey,
+        tolerance: tol,
+        softness: tol * 2,
+      });
+    }
     writeFileSync(opts.out, buffer);
     console.log(green(`Extracted layer ${opts.next} - ${opts.prev} → ${opts.out}`));
   });
