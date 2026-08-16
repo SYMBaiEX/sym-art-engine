@@ -2,7 +2,6 @@
 
 A deterministic, rule-driven generative PFP engine built for sophisticated
 layered NFT collections — the permanent generator infrastructure for
-**SYMBIES**, **OROCHIS**, and every SYMBaiEX collection after them.
 
 SYM Art Engine is an original engine. It borrows proven *concepts* from the
 generative-art space (ordered layers, weighted rarity, DNA uniqueness,
@@ -18,7 +17,6 @@ first-class preview/debug UI.
    the three.
 2. **Everything is data.** Slots, categories, rules, synergies, palettes —
    all project configuration. The engine contains zero collection-specific
-   logic; `projects/orochis` needs no engine changes.
 3. **Determinism is sacred.** Same project + assets + seed + engine version
    ⇒ same collection, byte for byte. Every build writes a manifest with
    config/trait/asset hashes so builds are reproducible and auditable.
