@@ -22,14 +22,13 @@ export async function createFixtureProject(): Promise<string> {
     rgba: { r: number; g: number; b: number; alpha: number },
     region?: { left: number; top: number; size: number },
   ) => {
-    let image: sharp.Sharp;
     if (region) {
       const patch = await sharp({
         create: { width: region.size, height: region.size, channels: 4, background: rgba },
       })
         .png()
         .toBuffer();
-      image = sharp({
+      const image = sharp({
         create: {
           width: FIXTURE_CANVAS,
           height: FIXTURE_CANVAS,
@@ -37,11 +36,13 @@ export async function createFixtureProject(): Promise<string> {
           background: { r: 0, g: 0, b: 0, alpha: 0 },
         },
       }).composite([{ input: patch, left: region.left, top: region.top }]);
-    } else {
-      image = sharp({
-        create: { width: FIXTURE_CANVAS, height: FIXTURE_CANVAS, channels: 4, background: rgba },
-      });
+      writeFileSync(join(assets, file), await image.png().toBuffer());
+      return;
     }
+
+    const image = sharp({
+      create: { width: FIXTURE_CANVAS, height: FIXTURE_CANVAS, channels: 4, background: rgba },
+    });
     writeFileSync(join(assets, file), await image.png().toBuffer());
   };
 

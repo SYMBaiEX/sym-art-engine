@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 
 /** Create a transparent RGBA canvas as a raw sharp instance. */
-export function blankCanvas(width: number, height: number): sharp.Sharp {
+export function blankCanvas(width: number, height: number) {
   return sharp({
     create: {
       width,
@@ -36,9 +36,9 @@ export async function checkerboard(
 
 /** Multiply the alpha channel of a PNG buffer/file by `opacity` (0..1). */
 export async function applyOpacity(
-  input: string | Buffer,
+  input: string | Buffer<ArrayBufferLike>,
   opacity: number,
-): Promise<Buffer> {
+): Promise<Buffer<ArrayBufferLike>> {
   const { data, info } = await sharp(input)
     .ensureAlpha()
     .raw()

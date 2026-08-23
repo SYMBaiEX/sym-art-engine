@@ -30,14 +30,17 @@ export async function startStudio(
   outDir: string,
 ): Promise<void> {
   let project = loadProject(projectDir);
-  const assetCache = new Map<string, Buffer>();
-  let board: Buffer | null = null;
+  const assetCache = new Map<string, Buffer<ArrayBufferLike>>();
+  let board: Buffer<ArrayBufferLike> | null = null;
 
-  const previewBuffer = async (asset: PlacedAsset): Promise<Buffer> => {
+  const previewBuffer = async (asset: PlacedAsset): Promise<Buffer<ArrayBufferLike>> => {
     const key = `${asset.absoluteFile}:${asset.opacity}`;
     const cached = assetCache.get(key);
     if (cached) return cached;
-    let buffer = await sharp(asset.absoluteFile).resize(PREVIEW_SIZE).png().toBuffer();
+    let buffer: Buffer<ArrayBufferLike> = await sharp(asset.absoluteFile)
+      .resize(PREVIEW_SIZE)
+      .png()
+      .toBuffer();
     if (asset.opacity < 1) buffer = await applyOpacity(buffer, asset.opacity);
     assetCache.set(key, buffer);
     return buffer;
@@ -110,7 +113,7 @@ export async function startStudio(
 
         // Assets are pre-resized to PREVIEW_SIZE, so composite on a
         // preview-sized canvas for a fast hot path.
-        let base: Buffer | undefined;
+        let base: Buffer<ArrayBufferLike> | undefined;
         if (isolate) {
           board ??= await checkerboard(PREVIEW_SIZE, PREVIEW_SIZE);
           base = board;
