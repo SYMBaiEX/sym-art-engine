@@ -230,7 +230,7 @@ output/<slug>/
 bun run test          # vitest
 ```
 
-44 tests cover PRNG/DNA determinism, weighted selection, every rule type,
+46 tests cover PRNG/DNA determinism, weighted selection, every rule type,
 None traits, multi-asset traits, variants, palette scoring, duplicate
 prevention, metadata, slot ordering, dimension validation, dry-run, and a
 golden test pinning Symbie #0001's DNA, metadata, and render reproducibility.
