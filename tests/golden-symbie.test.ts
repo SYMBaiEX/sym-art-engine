@@ -13,7 +13,7 @@ import { sha256 } from '../src/utils/hash.js';
 import type { Trait } from '../src/schemas/trait.js';
 
 /**
- * Golden test for Symbie #0001: the deterministic prototype edition.
+ * Golden test for DAZREN #1: the deterministic collection anchor edition.
  * Same project + assets + configuration + seed => same DNA and same
  * output image hash, forever. Render assertions are skipped until the
  * production asset PNGs exist.
@@ -24,20 +24,18 @@ const SYMBIES_DIR = join(
 );
 
 const GOLDEN_DNA_SOURCE = [
-  'background=background_lavender',
+  'background=background_void',
   'body=body_standard_charcoal',
+  'eyes=eyes_signal',
   'clothing=clothing_black_hoodie',
-  'neck=neck_sym_chain',
-  'growth=growth_purple_rear_crystals',
-  'eyes=eyes_white_neutral',
-  'mark=mark_diamond_rune',
   'ear=ear_x_tag',
+  'mark=mark_diamond_rune',
+  'glasses=glasses_none',
   'headwear=headwear_black_cap',
-  'special=special_none',
 ].join('\n');
 
 const GOLDEN_DNA_HASH =
-  '603cb3bca46bd15907873179e6405130a5bdce67f0330d54ecb00224e27c3aaf';
+  'c2638c14f15bec21490431e58777d500d90ef4b1175c2537066000f7982f4749';
 
 let project: LoadedProject;
 let selected: Map<string, Trait>;
@@ -45,11 +43,11 @@ let selected: Map<string, Trait>;
 beforeAll(() => {
   project = loadProject(SYMBIES_DIR);
   const fixed = project.config.fixedEditions.find((f) => f.edition === 1);
-  if (!fixed) throw new Error('Symbie #0001 fixed edition missing');
+  if (!fixed) throw new Error('DAZREN #1 fixed edition missing');
   selected = resolveFixedEdition(project, fixed.traits);
 });
 
-describe('Symbie #0001 golden', () => {
+describe('DAZREN #1 golden', () => {
   it('has the exact canonical DNA', () => {
     expect(canonicalDnaSource(selected, project)).toBe(GOLDEN_DNA_SOURCE);
     expect(dnaHash(selected, project)).toBe(GOLDEN_DNA_HASH);
@@ -57,20 +55,21 @@ describe('Symbie #0001 golden', () => {
 
   it('emits the exact public metadata', () => {
     const metadata = buildMetadata(1, selected, project);
-    expect(metadata.name).toBe('Symbie #0001');
-    expect(metadata.description).toBe('A Symbie from the SYMBaiEX ecosystem.');
-    expect(metadata.image).toBe('ipfs://PLACEHOLDER/0001.png');
+    expect(metadata.name).toBe('Dazren #1');
+    expect(metadata.description).toBe(
+      'One of 4,181 machine-born entities in the DAZREN Order, with a deterministic identity assembled from the hand-finished SYMBIES trait system.',
+    );
+    expect(metadata.image).toBe('ipfs://REPLACE_WITH_IMAGE_CID/1.png');
+    expect(metadata.external_url).toBe('https://nft.dazren.com');
     expect(metadata.attributes).toEqual([
-      { trait_type: 'Background', value: 'Lavender' },
+      { trait_type: 'Background', value: 'Void' },
       { trait_type: 'Body', value: 'Standard Charcoal' },
+      { trait_type: 'Eyes', value: 'Signal' },
       { trait_type: 'Clothing', value: 'Black Hoodie' },
-      { trait_type: 'Neck Accessory', value: 'SYM Chain' },
-      { trait_type: 'Head Growth', value: 'Purple Rear Crystals' },
-      { trait_type: 'Eyes', value: 'White Neutral' },
-      { trait_type: 'Forehead Mark', value: 'Diamond Rune' },
-      { trait_type: 'Ear / Side Accessory', value: 'X Tag' },
+      { trait_type: 'Ears', value: 'X Tag' },
+      { trait_type: 'Mark', value: 'Diamond Rune' },
+      { trait_type: 'Eyewear', value: 'None' },
       { trait_type: 'Headwear', value: 'Black Cap' },
-      { trait_type: 'Special Effect', value: 'None' },
     ]);
   });
 

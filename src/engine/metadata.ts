@@ -48,6 +48,12 @@ export function buildMetadata(
     image: fillTemplate(meta.imageTemplate, edition, meta.editionPadding),
     attributes,
   };
-  if (meta.externalUrl) metadata.external_url = meta.externalUrl;
+  if (meta.externalUrl) {
+    metadata.external_url = fillTemplate(
+      meta.externalUrl,
+      edition,
+      meta.editionPadding,
+    );
+  }
   return metadata;
 }
