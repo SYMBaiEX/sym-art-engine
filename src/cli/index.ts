@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command } from 'commander';
 import { writeFileSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
@@ -26,15 +28,14 @@ const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
 const purple = (s: string) => `\x1b[35m${s}\x1b[0m`;
 
 /**
- * Resolve a project argument: an explicit path, or a name looked up in
- * ./projects/<name> and ../../projects/<name> relative to cwd (so the
- * CLI works from the monorepo root and from the engine package).
+ * Resolve a project argument as an explicit path, or a name beneath the
+ * caller's local ./projects directory. Published packages never search a
+ * parent monorepo: collection data is intentionally supplied by the caller.
  */
 function resolveProjectDir(nameOrPath: string): string {
   const candidates = [
     isAbsolute(nameOrPath) ? nameOrPath : resolve(cwd(), nameOrPath),
     resolve(cwd(), 'projects', nameOrPath),
-    resolve(cwd(), '..', '..', 'projects', nameOrPath),
   ];
   for (const candidate of candidates) {
     if (fileExists(join(candidate, 'project.json'))) return candidate;
@@ -44,16 +45,10 @@ function resolveProjectDir(nameOrPath: string): string {
   );
 }
 
+/** Default outputs stay alongside the supplied project data. */
 function defaultOutDir(project: LoadedProject, override?: string): string {
   if (override) return resolve(cwd(), override);
-  const candidates = [
-    resolve(cwd(), 'output'),
-    resolve(cwd(), '..', '..', 'output'),
-  ];
-  for (const candidate of candidates) {
-    if (fileExists(candidate)) return join(candidate, project.config.slug);
-  }
-  return join(resolve(cwd(), 'output'), project.config.slug);
+  return join(project.dir, 'output');
 }
 
 /** Resolve the traits of an edition: fixed if defined, else seeded random. */
